@@ -1,19 +1,19 @@
+version: '3.9'
+
 services:
   db:
     image: postgres:16-alpine
     container_name: nawy-postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: nawy_user
+      POSTGRES_PASSWORD: nawy_password
       POSTGRES_DB: nawy_db
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - nawy-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U nawy_user -d nawy_db"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -23,38 +23,33 @@ services:
       context: ./server
       dockerfile: Dockerfile
     container_name: nawy-server
-    environment:
-      PORT: 3001
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_NAME: nawy_db
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-    ports:
-      - "3001:3001"
     depends_on:
       db:
         condition: service_healthy
-    networks:
-      - nawy-network
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: nawy_user
+      DB_PASSWORD: nawy_password
+      DB_NAME: nawy_db
+    ports:
+      - "4000:4000"
 
   client:
     build:
       context: ./client
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:4000/api
     container_name: nawy-client
-    environment:
-      NEXT_PUBLIC_API_URL: http://localhost:3001
-    ports:
-      - "3000:3000"
     depends_on:
       - server
-    networks:
-      - nawy-network
-
-networks:
-  nawy-network:
-    driver: bridge
+    environment:
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
 
 volumes:
   postgres_data:
