@@ -1,94 +1,287 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import {
+  Card,
+  CardContent,
+  CardActions,
+  TextField,
+  Select,
+  MenuItem,
+  Button,
+  FormControl,
+  InputLabel,
+  Chip,
+  CircularProgress,
+  Alert,
+  Box,
+  Typography,
+} from '@mui/material';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import {
+  fetchApartments,
+  selectApartments,
+  selectApartmentsMeta,
+  selectApartmentsFilters,
+  selectApartmentsLoading,
+  selectApartmentsError,
+  setSearch,
+  setMinPrice,
+  setMaxPrice,
+  setSort,
+  setPage,
+} from '../store/apartmentsSlice';
 
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  createdAt: string;
-  updatedAt: string;
-}
+export default function HomePage() {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
 
-export default function Home() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const apartments = useAppSelector(selectApartments);
+  const meta = useAppSelector(selectApartmentsMeta);
+  const filters = useAppSelector(selectApartmentsFilters);
+  const loading = useAppSelector(selectApartmentsLoading);
+  const error = useAppSelector(selectApartmentsError);
 
+  // Local state for input fields
+  const [searchInput, setSearchInput] = useState(filters.search);
+  const [minPriceInput, setMinPriceInput] = useState(filters.min_price?.toString() || '');
+  const [maxPriceInput, setMaxPriceInput] = useState(filters.max_price?.toString() || '');
+
+  // Fetch apartments on mount and when filters change
   useEffect(() => {
-    fetch('http://localhost:3001/api/users')
-      .then((res) => res.json())
-      .then((data) => {
-        setUsers(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError('Failed to fetch users');
-        setLoading(false);
-      });
-  }, []);
+    dispatch(fetchApartments());
+  }, [dispatch, filters]);
+
+  const handleApplyFilters = () => {
+    dispatch(setSearch(searchInput));
+    dispatch(setMinPrice(minPriceInput ? parseFloat(minPriceInput) : undefined));
+    dispatch(setMaxPrice(maxPriceInput ? parseFloat(maxPriceInput) : undefined));
+  };
+
+  const handleSortChange = (value: string) => {
+    dispatch(setSort(value as 'newest' | 'price_asc' | 'price_desc'));
+  };
+
+  const handlePrevPage = () => {
+    if (meta && meta.page > 1) {
+      dispatch(setPage(meta.page - 1));
+    }
+  };
+
+  const handleNextPage = () => {
+    if (meta && meta.page < meta.total_pages) {
+      dispatch(setPage(meta.page + 1));
+    }
+  };
+
+  const handleViewDetails = (id: number) => {
+    router.push(`/apartments/${id}`);
+  };
+
+  const formatPrice = (price: number) => {
+    return price.toLocaleString('en-US', { minimumFractionDigits: 0 }) + ' EGP';
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'available':
+        return 'success';
+      case 'sold':
+        return 'error';
+      case 'reserved':
+        return 'warning';
+      default:
+        return 'default';
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      <main className="container mx-auto px-4 py-16">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-5xl font-bold text-center mb-4 text-gray-800 dark:text-white">
-            Nawy Task
-          </h1>
-          <p className="text-center text-gray-600 dark:text-gray-300 mb-12">
-            Monorepo with Next.js + Tailwind & Node.js + Express + PostgreSQL
-          </p>
+    <div className="space-y-6">
+      {/* Page Title */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Apartments Listings</h1>
+        <p className="text-gray-600 mt-2">Browse available apartments and find your perfect home</p>
+      </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
-            <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-white">
-              Users
-            </h2>
+      {/* Filters */}
+      <Card className="p-4">
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Search */}
+            <TextField
+              label="Search"
+              placeholder="Project, unit name, or number"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleApplyFilters();
+                }
+              }}
+              fullWidth
+              size="small"
+            />
 
-            {loading && (
-              <p className="text-gray-600 dark:text-gray-300">Loading users...</p>
-            )}
+            {/* Min Price */}
+            <TextField
+              label="Min Price"
+              type="number"
+              placeholder="0"
+              value={minPriceInput}
+              onChange={(e) => setMinPriceInput(e.target.value)}
+              fullWidth
+              size="small"
+            />
 
-            {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                {error}
-              </div>
-            )}
+            {/* Max Price */}
+            <TextField
+              label="Max Price"
+              type="number"
+              placeholder="0"
+              value={maxPriceInput}
+              onChange={(e) => setMaxPriceInput(e.target.value)}
+              fullWidth
+              size="small"
+            />
 
-            {!loading && !error && users.length === 0 && (
-              <p className="text-gray-600 dark:text-gray-300">
-                No users found. The database is empty.
-              </p>
-            )}
+            {/* Sort */}
+            <FormControl fullWidth size="small">
+              <InputLabel>Sort By</InputLabel>
+              <Select
+                value={filters.sort}
+                label="Sort By"
+                onChange={(e) => handleSortChange(e.target.value)}
+              >
+                <MenuItem value="newest">Newest First</MenuItem>
+                <MenuItem value="price_asc">Price: Low to High</MenuItem>
+                <MenuItem value="price_desc">Price: High to Low</MenuItem>
+              </Select>
+            </FormControl>
+          </div>
 
-            {!loading && !error && users.length > 0 && (
-              <div className="space-y-4">
-                {users.map((user) => (
-                  <div
-                    key={user.id}
-                    className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow"
-                  >
-                    <h3 className="font-semibold text-lg text-gray-800 dark:text-white">
-                      {user.name}
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-300">{user.email}</p>
+          <div className="mt-4">
+            <Button variant="contained" onClick={handleApplyFilters} disabled={loading}>
+              Apply Filters
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Error Message */}
+      {error && (
+        <Alert severity="error">
+          {error}
+        </Alert>
+      )}
+
+      {/* Loading State */}
+      {loading && (
+        <Box className="flex justify-center py-12">
+          <CircularProgress />
+        </Box>
+      )}
+
+      {/* Apartments Grid */}
+      {!loading && apartments.length === 0 && (
+        <Box className="text-center py-12">
+          <Typography variant="h6" color="textSecondary">
+            No apartments found. Try adjusting your filters.
+          </Typography>
+        </Box>
+      )}
+
+      {!loading && apartments.length > 0 && (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {apartments.map((apartment) => (
+              <Card key={apartment.id} className="flex flex-col h-full">
+                <CardContent className="flex-1">
+                  <div className="flex justify-between items-start mb-2">
+                    <Typography variant="h6" component="h2" className="font-semibold">
+                      {apartment.project}
+                    </Typography>
+                    <Chip
+                      label={apartment.status.toUpperCase()}
+                      color={getStatusColor(apartment.status) as any}
+                      size="small"
+                    />
                   </div>
-                ))}
-              </div>
-            )}
+
+                  <Typography variant="body2" color="textSecondary" className="mb-2">
+                    {apartment.unit_name} • Unit #{apartment.unit_number}
+                  </Typography>
+
+                  <Typography variant="body2" color="textSecondary" className="mb-3">
+                    📍 {apartment.city}
+                  </Typography>
+
+                  <div className="space-y-1">
+                    <Typography variant="h5" className="font-bold text-blue-600">
+                      {formatPrice(apartment.price)}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      📐 {apartment.area} m²
+                    </Typography>
+                  </div>
+
+                  {apartment.description && (
+                    <Typography
+                      variant="body2"
+                      color="textSecondary"
+                      className="mt-3"
+                      sx={{
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                      }}
+                    >
+                      {apartment.description}
+                    </Typography>
+                  )}
+                </CardContent>
+
+                <CardActions className="p-4 pt-0">
+                  <Button
+                    variant="outlined"
+                    fullWidth
+                    onClick={() => handleViewDetails(apartment.id)}
+                  >
+                    View Details
+                  </Button>
+                </CardActions>
+              </Card>
+            ))}
           </div>
 
-          <div className="mt-8 text-center">
-            <a
-              href="http://localhost:3001/api-docs"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
-            >
-              View API Documentation
-            </a>
-          </div>
-        </div>
-      </main>
+          {/* Pagination */}
+          {meta && meta.total_pages > 1 && (
+            <Box className="flex justify-center items-center gap-4 mt-8">
+              <Button
+                variant="outlined"
+                onClick={handlePrevPage}
+                disabled={meta.page <= 1 || loading}
+              >
+                Previous
+              </Button>
+
+              <Typography variant="body1">
+                Page {meta.page} of {meta.total_pages} ({meta.total} total)
+              </Typography>
+
+              <Button
+                variant="outlined"
+                onClick={handleNextPage}
+                disabled={meta.page >= meta.total_pages || loading}
+              >
+                Next
+              </Button>
+            </Box>
+          )}
+        </>
+      )}
     </div>
   );
 }
