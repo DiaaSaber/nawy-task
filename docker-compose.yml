@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:16-alpine
@@ -39,9 +37,6 @@ services:
         condition: service_healthy
     networks:
       - nawy-network
-    volumes:
-      - ./server:/app
-      - /app/node_modules
 
   client:
     build:
@@ -56,10 +51,6 @@ services:
       - server
     networks:
       - nawy-network
-    volumes:
-      - ./client:/app
-      - /app/node_modules
-      - /app/.next
 
 networks:
   nawy-network:

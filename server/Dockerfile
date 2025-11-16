@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:20-slim
 
 WORKDIR /app
 
@@ -16,6 +16,8 @@ RUN npm run build
 
 # Expose port
 EXPOSE 3001
+
+ENV NODE_ENV=production
 
 # Start the application
 CMD ["npm", "start"]
