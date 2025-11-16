@@ -1,109 +1,169 @@
-# Nawy Task - Monorepo
+# Nawy Apartments - Full Stack Application
 
-A monorepo containing a server and client application with Docker support.
+A production-ready apartments listing application built with modern web technologies. This monorepo contains a RESTful API backend and a responsive Next.js frontend, fully containerized with Docker.
 
-## Project Structure
+## 🏗️ Project Structure
 
 ```
 nawy-task/
-├── server/          # Node.js + TypeScript + Express + Sequelize + PostgreSQL + Swagger
-├── client/          # Next.js + Tailwind CSS
-└── docker-compose.yml
+├── server/              # Backend API
+│   ├── src/
+│   │   ├── models/      # Sequelize models (Apartment)
+│   │   ├── controllers/ # Business logic
+│   │   ├── routes/      # API routes
+│   │   ├── config/      # Database & Swagger config
+│   │   └── middleware/  # Error handling
+│   └── Dockerfile
+├── client/              # Frontend application
+│   ├── app/             # Next.js App Router pages
+│   │   ├── page.tsx           # Listings with filters
+│   │   ├── add/page.tsx       # Create apartment
+│   │   └── apartments/[id]/   # Apartment details
+│   ├── store/           # Redux state management
+│   ├── lib/             # API client (Axios)
+│   └── types/           # TypeScript interfaces
+├── docker-compose.yml
+└── README.md
 ```
 
-## Tech Stack
+## 🚀 Tech Stack
 
-### Server
-- Node.js
-- TypeScript
-- Express.js
-- Sequelize ORM
-- PostgreSQL
-- Swagger/OpenAPI
+### Backend
+- **Node.js** with **TypeScript**
+- **Express.js** - Web framework
+- **Sequelize ORM** - Database modeling
+- **PostgreSQL** - Relational database
+- **Swagger/OpenAPI** - API documentation
 
-### Client
-- Next.js 15
-- TypeScript
-- Tailwind CSS
+### Frontend
+- **Next.js 16** - React framework with App Router
+- **TypeScript** - Type safety
+- **Material-UI (MUI)** - Component library
+- **Redux Toolkit** - State management
+- **Tailwind CSS** - Utility-first styling
+- **Axios** - HTTP client
 
-## Getting Started
+## ⚡ Quick Start
 
 ### Prerequisites
-- Docker
-- Docker Compose
+- **Docker** and **Docker Compose** installed
+- No other setup required!
 
-### Running the Application
+### Running the Application (First Time)
 
-Start all services with a single command:
+1. **Clone the repository** (if you haven't already):
+   ```bash
+   git clone <repository-url>
+   cd nawy-task
+   ```
+
+2. **Start all services** with a single command:
+   ```bash
+   docker compose up --build
+   ```
+
+   This will:
+   - Build the frontend and backend Docker images
+   - Start PostgreSQL database
+   - Run database migrations and seed 5 sample apartments
+   - Start the backend API server
+   - Start the Next.js frontend server
+
+3. **Access the application**:
+   - **Frontend**: http://localhost:3000
+   - **Backend API**: http://localhost:4000/api
+   - **API Documentation**: http://localhost:4000/api/docs
+
+That's it! The application is now running with sample data.
+
+## 📍 Application URLs
+
+| Service | URL | Description |
+|---------|-----|-------------|
+| Frontend | http://localhost:3000 | Main application UI |
+| Backend API | http://localhost:4000/api | RESTful API endpoints |
+| Swagger Docs | http://localhost:4000/api/docs | Interactive API documentation |
+| Health Check | http://localhost:4000/api/health | API health status |
+| PostgreSQL | localhost:5432 | Database (credentials in docker-compose.yml) |
+
+## 🎯 Backend API Endpoints
+
+### Health
+- `GET /api/health` - Health check
+
+### Apartments
+- `GET /api/apartments` - List apartments with filtering, sorting, and pagination
+  - Query params: `search`, `min_price`, `max_price`, `sort` (newest/price_asc/price_desc), `page`, `page_size`
+- `GET /api/apartments/:id` - Get apartment details by ID
+- `POST /api/apartments` - Create a new apartment
+  - Required fields: `project`, `unit_name`, `unit_number`, `price`, `area`, `city`
+  - Optional fields: `description`, `status` (available/sold/reserved)
+
+
+## 🖥️ Frontend Pages
+
+| Route | Description |
+|-------|-------------|
+| `/` | **Main Listings Page** - Browse apartments with search, price filters, sorting, and pagination |
+| `/apartments/:id` | **Apartment Details** - View detailed information about a specific apartment |
+| `/add` | **Create Apartment** - Form to add a new apartment listing |
+
+### Features
+- 🔍 **Search** - Search by project name, unit name, or unit number
+- 💰 **Price Filtering** - Filter by minimum and maximum price
+- 🔄 **Sorting** - Sort by newest, price (low to high), or price (high to low)
+- 📄 **Pagination** - Navigate through multiple pages of results
+- ✅ **Form Validation** - Client-side validation with error messages
+- 📱 **Responsive Design** - Works on desktop, tablet, and mobile devices
+- 🎨 **Material-UI Components** - Professional UI with cards, buttons, and inputs
+
+## 🐳 Docker Commands
 
 ```bash
+# Start all services (build if needed)
 docker compose up --build
-```
 
-This will start:
-- PostgreSQL database on port 5432
-- Server API on port 3001
-- Client application on port 3000
+# Start services in detached mode (background)
+docker compose up -d
 
-### Accessing the Application
-
-- **Client**: http://localhost:3000
-- **Server API**: http://localhost:3001
-- **API Documentation (Swagger)**: http://localhost:3001/api-docs
-- **Health Check**: http://localhost:3001/health
-
-## Development
-
-### Server Development
-
-```bash
-cd server
-npm install
-npm run dev
-```
-
-### Client Development
-
-```bash
-cd client
-npm install
-npm run dev
-```
-
-## API Endpoints
-
-- `GET /api/users` - Get all users
-- `POST /api/users` - Create a new user
-- `GET /api/users/:id` - Get user by ID
-- `GET /health` - Health check endpoint
-
-## Environment Variables
-
-### Server
-Create a `.env` file in the `server` directory (see `.env.example`):
-
-```
-PORT=3001
-DB_HOST=db
-DB_PORT=5432
-DB_NAME=nawy_db
-DB_USER=postgres
-DB_PASSWORD=postgres
-```
-
-## Docker Commands
-
-```bash
-# Start services
-docker compose up --build
-
-# Stop services
+# Stop all services
 docker compose down
 
-# View logs
+# Stop and remove all data (fresh start)
+docker compose down -v
+
+# View logs (all services)
 docker compose logs -f
 
-# Rebuild specific service
+# View logs (specific service)
+docker compose logs -f server
+docker compose logs -f client
+
+# Rebuild a specific service
 docker compose build server
 docker compose build client
+
+# Check running containers
+docker compose ps
 ```
+
+## 🗂️ Data Persistence
+
+- **PostgreSQL data** is persisted using Docker volumes
+- Stopping and restarting containers preserves all data
+- To reset the database, run: `docker compose down -v`
+
+## 🧪 Using the Application
+
+1. **Browse Apartments**: Visit http://localhost:3000
+2. **Search & Filter**: Try searching for "Palm" or filtering by price
+3. **View Details**: Click "View Details" on any apartment
+4. **Create New**: Go to "Add Apartment" in the navigation
+5. **API Testing**: Visit http://localhost:4000/api/docs for Swagger UI
+
+
+### Port already in use
+Make sure ports 3000, 4000, and 5432 are not used by other applications.
+
+### Database connection issues
+The backend waits for the database to be healthy before starting. Check `docker compose logs db`.
