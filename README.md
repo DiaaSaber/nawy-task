@@ -2,30 +2,6 @@
 
 A production-ready apartments listing application built with modern web technologies. This monorepo contains a RESTful API backend and a responsive Next.js frontend, fully containerized with Docker.
 
-## 🏗️ Project Structure
-
-```
-nawy-task/
-├── server/              # Backend API
-│   ├── src/
-│   │   ├── models/      # Sequelize models (Apartment)
-│   │   ├── controllers/ # Business logic
-│   │   ├── routes/      # API routes
-│   │   ├── config/      # Database & Swagger config
-│   │   └── middleware/  # Error handling
-│   └── Dockerfile
-├── client/              # Frontend application
-│   ├── app/             # Next.js App Router pages
-│   │   ├── page.tsx           # Listings with filters
-│   │   ├── add/page.tsx       # Create apartment
-│   │   └── apartments/[id]/   # Apartment details
-│   ├── store/           # Redux state management
-│   ├── lib/             # API client (Axios)
-│   └── types/           # TypeScript interfaces
-├── docker-compose.yml
-└── README.md
-```
-
 ## 🚀 Tech Stack
 
 ### Backend
